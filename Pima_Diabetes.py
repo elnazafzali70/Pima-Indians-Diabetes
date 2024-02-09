@@ -126,4 +126,4 @@ def plot_outliers_box(patient_data_copy, feature, title = None, boxpoints ='susp
     fig = go.Figure(data = traces, layout = layout)
     py.iplot(fig, filename = "Outliers")
 
-
+plot_outliers_box(patient_data_copy, 'Glucose')
