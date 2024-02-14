@@ -29,6 +29,8 @@ print(summary_stats)
 # Make a deep copy of the dataset
 patient_data_copy = patient_data.copy(deep=True)
 
+
+
 # Replace 0 values with NaN in specific columns
 columns_to_replace = ['Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI']
 patient_data_copy [columns_to_replace] = patient_data_copy [columns_to_replace].replace(0, np.NaN)
@@ -70,7 +72,8 @@ g = sns.pairplot(patient_data_copy , hue = "Outcome", palette = "husl")
 
 
 
-def plot_outliers_box(patient_data_copy, feature, title = None, boxpoints ='suspectedoutliers', colors = None):
+def plot_outliers_box(patient_data_copy, feature, title = None, boxpoints ='suspectedoutliers', colors = None, filename=None):
+    
     if feature not in patient_data_copy.columns:
         raise ValueError(f"Feature '{feature}' not found in the DataFrame.")
 
@@ -124,6 +127,52 @@ def plot_outliers_box(patient_data_copy, feature, title = None, boxpoints ='susp
 
     layout = go.Layout(title = title)
     fig = go.Figure(data = traces, layout = layout)
-    py.iplot(fig, filename = "Outliers")
+    if filename is not None:
+        py.plot(fig, filename=filename)
+    else:
+        py.iplot(fig)
+    
 
-plot_outliers_box(patient_data_copy, 'Glucose')
+
+plot_outliers_box(patient_data_copy, 'Glucose', 'Glucose outliers', filename='Glucose_outliers.html')
+plot_outliers_box(patient_data_copy, 'Pregnancies', 'Pregnancies outliers', filename='Pregnancies_outliers.html')
+plot_outliers_box(patient_data_copy, 'Age', 'Age outliers', filename='Age_outliers.html')
+plot_outliers_box(patient_data_copy, 'BloodPressure', 'BloodPressure outliers', filename='BloodPressure_outliers.html')
+plot_outliers_box(patient_data_copy, 'SkinThickness', 'SkinThickness outliers', filename='SkinThickness_outliers.html')
+plot_outliers_box(patient_data_copy, 'Insulin', 'Insulin outliers', filename='Insulin_outliers.html')
+plot_outliers_box(patient_data_copy, 'BMI', 'BMI outliers', filename='BMI_outliers.html')
+plot_outliers_box(patient_data_copy, 'DiabetesPedigreeFunction', 'DiabetesPedigreeFunction outliers', filename='DiabetesPedigreeFunction_outliers.html')
+
+
+
+# using the IQR method to identify outliers
+Q1 = patient_data_copy.quantile(0.25)
+Q3 = patient_data_copy.quantile(0.75)
+IQR = Q3 - Q1
+
+# Define a function to identify outliers
+def detect_outliers(series):
+    return (series < (Q1 - 1.5 * IQR)) | (series > (Q3 + 1.5 * IQR))
+
+outliers = patient_data_copy.apply(detect_outliers)
+
+# Calculate median
+medians = patient_data_copy.median()
+
+
+# Reset the index of the outliers Series and medians Series
+outliers.reset_index(drop=True, inplace=True)
+medians.reset_index(drop=True, inplace=True)
+
+# Replace outliers with median
+for col in patient_data_copy.columns:
+    patient_data_copy[col] = patient_data_copy[col].mask(outliers[col], medians[col])
+    
+plot_outliers_box(patient_data_copy, 'Glucose', 'Glucose outliers', filename='Glucose_outliers_after.html')
+plot_outliers_box(patient_data_copy, 'Pregnancies', 'Pregnancies outliers', filename='Pregnancies_outliers_after.html')
+plot_outliers_box(patient_data_copy, 'Age', 'Age outliers', filename='Age_outliers_after.html')
+plot_outliers_box(patient_data_copy, 'BloodPressure', 'BloodPressure outliers', filename='BloodPressure_outliers_after.html')
+plot_outliers_box(patient_data_copy, 'SkinThickness', 'SkinThickness outliers', filename='SkinThickness_outliers_after.html')
+plot_outliers_box(patient_data_copy, 'Insulin', 'Insulin outliers', filename='Insulin_outliers_after.html')
+plot_outliers_box(patient_data_copy, 'BMI', 'BMI outliers', filename='BMI_outliers_after.html')
+plot_outliers_box(patient_data_copy, 'DiabetesPedigreeFunction', 'DiabetesPedigreeFunction outliers', filename='DiabetesPedigreeFunction_outliers_after.html')    
